@@ -1,26 +1,19 @@
 package data.hullmods;
 
-import Utilities.MHMods_utilities;
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipAPI.HullSize;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
-import com.fs.starfarer.api.loading.HullModSpecAPI;
-import com.fs.starfarer.api.ui.Alignment;
-import com.fs.starfarer.api.ui.LabelAPI;
-import com.fs.starfarer.api.ui.TooltipMakerAPI;
-import com.fs.starfarer.api.util.Misc;
-import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static Utilities.mhmods_eneableSmod.getEnable;
 import static Utilities.MHMods_utilities.floatToString;
 
-    public class MHMods_FluxBooster extends mhmods_baseSHmod {
+public class MHMods_FluxBooster extends BaseHullMod {
 
     final float
             vent_bonus = 25f,
@@ -37,7 +30,6 @@ import static Utilities.MHMods_utilities.floatToString;
         maneuverBonusMap.put(HullSize.CRUISER, 100);
         maneuverBonusMap.put(HullSize.CAPITAL_SHIP, 125);
 
-        id = "mhmods_fluxbooster";
     }
 
     public void applyEffectsBeforeShipCreation(HullSize hullSize, MutableShipStatsAPI stats, String id) {
@@ -52,54 +44,24 @@ import static Utilities.MHMods_utilities.floatToString;
     public String getDescriptionParam(int index, HullSize hullSize, ShipAPI ship) {
         if (index == 0) return Math.round(vent_bonus) + "%";
         if (index == 1) return floatToString(vent_bonus * RFCMult) + "%";
-        if (index == 2) return "" + maneuverBonusMap.get(HullSize.FRIGATE) + "%";
-        if (index == 3) return "" + maneuverBonusMap.get(HullSize.DESTROYER) + "%";
-        if (index == 4) return "" + maneuverBonusMap.get(HullSize.CRUISER) + "%";
-        if (index == 5) return "" + maneuverBonusMap.get(HullSize.CAPITAL_SHIP) + "%";
-        if (index == 6) return "" + Math.round(boostDuration);
+        if (index == 2) return maneuverBonusMap.get(HullSize.FRIGATE) + "%";
+        if (index == 3) return maneuverBonusMap.get(HullSize.DESTROYER) + "%";
+        if (index == 4) return maneuverBonusMap.get(HullSize.CRUISER) + "%";
+        if (index == 5) return maneuverBonusMap.get(HullSize.CAPITAL_SHIP) + "%";
+        if (index == 6) return String.valueOf(Math.round(boostDuration));
         return null;
     }
 
-    @Override
-    public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
-        if (!getEnable()) return;
-        if (!Keyboard.isKeyDown(Keyboard.getKeyIndex("F1")) && (ship == null || !ship.getVariant().getSMods().contains(id))){
-            tooltip.addPara("Hold F1 to show S-mod effect info", Misc.getGrayColor(),10);
-            return;
-        }
-        Color lableColor = Misc.getTextColor();
-        Color h = Misc.getHighlightColor();
-        if (ship == null || !ship.getVariant().getSMods().contains(id)) {
-            tooltip.addSectionHeading("Effect if S-modded", Alignment.MID, pad);
-            lableColor = Misc.getGrayColor();
-            h = Misc.getGrayColor();
-        }
-        HullModSpecAPI hullmod = Global.getSettings().getHullModSpec(id);
-        LabelAPI label = tooltip.addPara(hullmod.getDescriptionFormat(), pad, lableColor, h,
-                Math.round(vent_bonus) + "%",
-                floatToString(vent_bonus * RFCMult) + "%",
-                "" + maneuverBonusMap.get(HullSize.FRIGATE) + "%",
-                "" + maneuverBonusMap.get(HullSize.DESTROYER) + "%",
-                "" + maneuverBonusMap.get(HullSize.CRUISER) + "%",
-                "" + maneuverBonusMap.get(HullSize.CAPITAL_SHIP) + "%",
-                "" + Math.round(boostDurationSMod));
-
-        label.setHighlight(Math.round(vent_bonus) + "%",
-                floatToString(vent_bonus * RFCMult) + "%",
-                "" + maneuverBonusMap.get(HullSize.FRIGATE) + "%",
-                "" + maneuverBonusMap.get(HullSize.DESTROYER) + "%",
-                "" + maneuverBonusMap.get(HullSize.CRUISER) + "%",
-                "" + maneuverBonusMap.get(HullSize.CAPITAL_SHIP) + "%",
-                "" + Math.round(boostDurationSMod));
-
-        label.setHighlightColors(h,h,h,h,h,h,s);
+    public String getSModDescriptionParam(int index, ShipAPI.HullSize hullSize) {
+        if (index == 0) return String.valueOf(Math.round(boostDurationSMod));
+        return null;
     }
 
     public void advanceInCombat(ShipAPI ship, float amount) {
         if (!ship.isAlive()) return;
 
         float boostDuration = this.boostDuration;
-        if (ship.getVariant().getSMods().contains(id) && getEnable()) boostDuration = boostDurationSMod;
+        if (isSMod(ship)) boostDuration = boostDurationSMod;
 
         float maneuverBonus = maneuverBonusMap.get(ship.getHullSize());
         float timeLeft = boostDuration;

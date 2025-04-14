@@ -2,8 +2,8 @@
 	"id":"more_hullmods",
 	"name":"More HullMods",
 	"author":"PureTilt",
-	"version":"1.12.0",
+	"version":"1.13.0",
 	"description":"Adds more hullmods",
-	"gameVersion":"0.97a-RC11",
+	"gameVersion":"0.98a",
 	"jars":["jars/More HullMods.jar"],
 }

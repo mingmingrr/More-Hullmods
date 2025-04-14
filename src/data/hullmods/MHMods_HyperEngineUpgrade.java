@@ -4,17 +4,9 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipAPI.HullSize;
-import com.fs.starfarer.api.loading.HullModSpecAPI;
-import com.fs.starfarer.api.ui.Alignment;
-import com.fs.starfarer.api.ui.LabelAPI;
-import com.fs.starfarer.api.ui.TooltipMakerAPI;
-import com.fs.starfarer.api.util.Misc;
-import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.util.Map;
-
-import static Utilities.mhmods_eneableSmod.getEnable;
 
 public class MHMods_HyperEngineUpgrade extends mhmods_baseSHmod {
 
@@ -27,12 +19,7 @@ public class MHMods_HyperEngineUpgrade extends mhmods_baseSHmod {
     }
 
     public void applyEffectsBeforeShipCreation(HullSize hullSize, MutableShipStatsAPI stats, String id) {
-        if (stats.getVariant().getSMods().contains(this.id) && getEnable())
-            stats.getAllowZeroFluxAtAnyLevel().modifyFlat(id, 1f);
-    }
-
-    @Override
-    public void applyEffectsAfterShipCreation(ShipAPI ship, String id) {
+        if (isSMod(stats)) stats.getAllowZeroFluxAtAnyLevel().modifyFlat(id, 1f);
     }
 
     public String getDescriptionParam(int index, HullSize hullSize, ShipAPI ship) {
@@ -42,42 +29,10 @@ public class MHMods_HyperEngineUpgrade extends mhmods_baseSHmod {
             if (ship == null) {
                 return "zero flux boost - ship base speed/3 + 20 /n (exact number on install)";
             } else {
-                float zerofluxboost = 20f + ship.getMutableStats().getZeroFluxSpeedBoost().getModifiedValue() - ship.getMutableStats().getMaxSpeed().getModifiedValue() / 3f;
-                return Math.round(zerofluxboost) + "";
+                return String.valueOf(Math.round(calculateSpeedBonus(ship)));
             }
         }
         return null;
-    }
-
-    @Override
-    public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
-        if (!getEnable()) return;
-        if (!Keyboard.isKeyDown(Keyboard.getKeyIndex("F1")) && (ship == null || !ship.getVariant().getSMods().contains(id))){
-            tooltip.addPara("Hold F1 to show S-mod effect info", Misc.getGrayColor(), 10);
-            return;
-        }
-        Color labelColor = Misc.getTextColor();
-        Color h = Misc.getHighlightColor();
-        if (ship == null || !ship.getVariant().getSMods().contains(id)) {
-            tooltip.addSectionHeading("Effect if S-modded", Alignment.MID, pad);
-            labelColor = Misc.getGrayColor();
-            h = Misc.getGrayColor();
-        }
-        String boost = "zero flux boost - ship base speed/3 + 20 /n (exact number on install)";
-        if (ship != null) {
-            float zeroFluxBoost = 20f + ship.getMutableStats().getZeroFluxSpeedBoost().getModifiedValue() - ship.getMutableStats().getMaxSpeed().getModifiedValue() / 3f;
-            boost = String.valueOf(Math.round(zeroFluxBoost));
-        }
-
-        HullModSpecAPI hullmod = Global.getSettings().getHullModSpec(id);
-        LabelAPI label = tooltip.addPara(hullmod.getDescriptionFormat(), pad, labelColor, h,
-                Math.round(fluxThreshold * 100) + "%",
-                "The 0-flux speed boost is activated at any flux level, as long as the ship is not generating flux or is venting / overloaded",
-                boost);
-
-        label.setHighlight(Math.round(fluxThreshold * 100) + "%", "The 0-flux speed boost is activated at any flux level, as long as the ship is not generating flux or is venting / overloaded", boost);
-
-        label.setHighlightColors(h, s, h);
     }
 
     public void advanceInCombat(ShipAPI ship, float amount) {
@@ -90,7 +45,7 @@ public class MHMods_HyperEngineUpgrade extends mhmods_baseSHmod {
         if (customCombatData.get("MHMods_HyperEngineUpgrade" + id) instanceof Float) {
             speedBoost = (float) customCombatData.get("MHMods_HyperEngineUpgrade" + id);
         } else {
-            speedBoost = 20f + ship.getMutableStats().getZeroFluxSpeedBoost().base - ship.getMutableStats().getMaxSpeed().getModifiedValue() / 3f;
+            speedBoost = calculateSpeedBonus(ship);
             customCombatData.put("MHMods_HyperEngineUpgrade" + id, speedBoost);
         }
 
@@ -106,6 +61,10 @@ public class MHMods_HyperEngineUpgrade extends mhmods_baseSHmod {
     @Override
     public boolean shouldAddDescriptionToTooltip(HullSize hullSize, ShipAPI ship, boolean isForModSpec) {
         return super.shouldAddDescriptionToTooltip(hullSize, ship, isForModSpec);
+    }
+
+    float calculateSpeedBonus(ShipAPI ship) {
+        return 20f + ship.getMutableStats().getZeroFluxSpeedBoost().getModifiedValue() - ship.getMutableStats().getMaxSpeed().getModifiedValue() / 3f;
     }
 }
 

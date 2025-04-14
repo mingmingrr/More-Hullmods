@@ -13,6 +13,12 @@
 			"mhmods_unstableshields",
 			"mhmods_stiffMounts"
         ]
+    },
+   "hullmodSellFrequency":{
+			"mhmods_hyperengineupgrade":10,
+			"mhmods_hullfoam":10,
+			"mhmods_integratedarmor":10,
+			"mhmods_particleaccelerator":10
     }
 }
 
